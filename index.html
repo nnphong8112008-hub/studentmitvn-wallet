@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ví Sinh Viên - Quản lý chi tiêu thông minh</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              200: '#b9ddfe',
+              300: '#7cc2fd',
+              400: '#36a3f9',
+              500: '#0c87eb',
+              600: '#026bc9',
+              700: '#0355a2',
+              800: '#074885',
+              900: '#1e3a5f',
+              dark: '#1d2a44'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Font Awesome CDN for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f6fd;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="text-slate-700 min-h-screen flex flex-col antialiased select-none">
+
+  <!-- ==================== 1. MÀN HÌNH ĐĂNG NHẬP (AUTH VIEW) ==================== -->
+  <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-blue-100 via-sky-50 to-indigo-100 overflow-y-auto">
+    <div class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 border border-blue-100 my-auto">
+      
+      <!-- Cột giới thiệu bên trái -->
+      <div class="bg-gradient-to-br from-sky-400 via-brand-500 to-indigo-600 p-8 md:p-12 flex flex-col justify-between text-white relative overflow-hidden">
+        <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="relative z-10">
+          <div class="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 shadow-inner">
+            <i class="fa-solid fa-wallet text-2xl text-white"></i>
+          </div>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3">Ví Sinh Viên</h1>
+          <p class="text-blue-100 text-sm md:text-base leading-relaxed">
+            Quản lý chi tiêu thông minh, tự động phân bổ ngân sách từng ngày & liên kết ngân hàng tiện lợi cho đời sống sinh viên!
+          </p>
+        </div>
+
+        <div class="relative z-10 my-8 flex justify-center items-center">
+          <!-- Minh họa nón tốt nghiệp và sách -->
+          <div class="relative w-48 h-40 flex items-center justify-center">
+            <div class="w-36 h-28 bg-white/15 backdrop-blur-sm rounded-2xl shadow-xl flex flex-col items-center justify-center transform -rotate-3 border border-white/20">
+              <i class="fa-solid fa-graduation-cap text-5xl text-yellow-300 drop-shadow mb-2"></i>
+              <div class="h-2 w-20 bg-white/30 rounded-full mb-1"></div>
+              <div class="h-2 w-14 bg-white/30 rounded-full"></div>
+            </div>
+            <div class="absolute -bottom-2 -right-2 bg-white text-brand-600 text-xs px-3 py-1.5 rounded-full font-bold shadow-lg flex items-center gap-1.5">
+              <i class="fa-solid fa-sparkles text-amber-400"></i> Đơn giản & Tiết kiệm
+            </div>
+          </div>
+        </div>
+
+        <div class="text-xs text-blue-100/80 relative z-10 flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved"></i> Bảo mật tài chính & Tối ưu cho sinh viên ĐH
+        </div>
+      </div>
+
+      <!-- Cột Form Đăng Nhập bên phải -->
+      <div class="p-8 md:p-12 flex flex-col justify-center">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-slate-800">Đăng nhập</h2>
+          <p class="text-sm text-slate-500 mt-1">Chào mừng bạn quay trở lại với Ví Sinh Viên!</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Tên hoặc Email của bạn</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-regular fa-envelope"></i>
+              </span>
+              <input type="text" id="loginUsername" required value="Nhi Yen" placeholder="Nhập tên của bạn (vd: Nhi Yen)" 
+                     class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Mật khẩu</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-lock"></i>
+              </span>
+              <input type="password" id="loginPassword" required value="123456" placeholder="Mật khẩu của bạn" 
+                     class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm transition">
+              <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600">
+                <i id="eyeIcon" class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs pt-1">
+            <label class="flex items-center gap-2 cursor-pointer text-slate-600">
+              <input type="checkbox" checked class="rounded text-brand-600 focus:ring-brand-500 border-slate-300">
+              Ghi nhớ đăng nhập
+            </label>
+            <a href="javascript:void(0)" onclick="showToast('Mật khẩu mẫu là: 123456')" class="text-brand-600 font-semibold hover:underline">Quên mật khẩu?</a>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 active:scale-[0.99] transition text-white font-semibold rounded-xl shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 mt-4 text-sm">
+            <span>Đăng nhập</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="relative my-6 text-center">
+          <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+          <span class="relative px-3 bg-white text-xs text-slate-400 font-medium">hoặc</span>
+        </div>
+
+        <button onclick="handleLogin(event)" type="button" class="w-full py-2.5 border-2 border-brand-500/30 hover:border-brand-500 text-brand-700 font-semibold rounded-xl text-sm flex items-center justify-center gap-2 transition hover:bg-brand-50/50">
+          <i class="fa-solid fa-user-plus text-xs"></i>
+          <span>Trải nghiệm ngay không cần tài khoản</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==================== 2. MAIN APP LAYOUT (Sau khi đăng nhập) ==================== -->
+  <div id="mainApp" class="flex-1 flex flex-col md:flex-row min-h-screen">
+    
+    <!-- SIDEBAR BÊN TRÁI -->
+    <aside class="w-full md:w-64 bg-slate-900 text-white flex flex-col justify-between shrink-0 transition-all z-20">
+      <div>
+        <!-- Logo Branding -->
+        <div class="p-6 flex items-center gap-3.5 border-b border-slate-800">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-sky-400 flex items-center justify-center shadow-lg">
+            <i class="fa-solid fa-wallet text-white text-lg"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-base tracking-wide text-white">Ví Sinh Viên</h1>
+            <p class="text-[11px] text-slate-400">Kế hoạch chi tiêu số</p>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="p-4 space-y-1.5 text-sm font-medium">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition bg-brand-600 text-white shadow-md">
+            <i class="fa-solid fa-house w-5 text-center text-base"></i>
+            <span>Trang chủ</span>
+          </button>
+
+          <button onclick="switchTab('plan-setup')" id="nav-plan-setup" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800/70">
+            <i class="fa-regular fa-calendar-plus w-5 text-center text-base"></i>
+            <span>Lập kế hoạch</span>
+          </button>
+
+          <button onclick="switchTab('plan-result')" id="nav-plan-result" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800/70">
+            <i class="fa-solid fa-table-list w-5 text-center text-base"></i>
+            <span>Kế hoạch tuần</span>
+          </button>
+
+          <button onclick="switchTab('banking')" id="nav-banking" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800/70 relative">
+            <i class="fa-solid fa-building-columns w-5 text-center text-base text-sky-400"></i>
+            <span>Liên kết ngân hàng</span>
+            <span class="ml-auto text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded-full font-bold">Mới</span>
+          </button>
+
+          <button onclick="switchTab('statistics')" id="nav-statistics" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800/70">
+            <i class="fa-solid fa-chart-pie w-5 text-center text-base"></i>
+            <span>Thống kê</span>
+          </button>
+
+          <button onclick="switchTab('settings')" id="nav-settings" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl transition text-slate-400 hover:text-white hover:bg-slate-800/70">
+            <i class="fa-solid fa-gear w-5 text-center text-base"></i>
+            <span>Cài đặt</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- User footer & Đăng xuất -->
+      <div class="p-4 border-t border-slate-800">
+        <div class="flex items-center gap-3 px-3 py-2 mb-2">
+          <div class="w-8 h-8 rounded-full bg-sky-500/20 border border-sky-400/40 flex items-center justify-center font-bold text-sky-300 text-xs" id="userAvatarText">
+            NY
+          </div>
+          <div class="truncate">
+            <p class="text-xs font-semibold text-slate-200 truncate" id="sidebarUserName">Nhi Yen</p>
+            <p class="text-[10px] text-emerald-400 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Đã kết nối ví
+            </p>
+          </div>
+        </div>
+        <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-2.5 text-xs text-rose-400 hover:bg-rose-500/10 rounded-xl transition font-medium">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Đăng xuất</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENT KHU VỰC CHÍNH -->
+    <main class="flex-1 flex flex-col overflow-y-auto max-h-screen">
+      
+      <!-- Top header di động & thông báo -->
+      <header class="bg-white/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-200/80 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-slate-900 focus:outline-none">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="text-xs bg-brand-100 text-brand-700 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+              <i class="fa-solid fa-wallet text-[10px]"></i> Ví Sinh Viên
+            </span>
+            <span class="text-xs text-slate-400 hidden sm:inline">• Quản lý ngân sách thông minh</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Dropdown chọn kỳ -->
+          <div class="relative">
+            <select id="periodSelector" onchange="changePeriod(this.value)" class="text-xs bg-slate-100 hover:bg-slate-200 border-0 rounded-xl px-3 py-2 font-medium text-slate-700 cursor-pointer focus:ring-2 focus:ring-brand-500 transition">
+              <option value="current">Tuần này (27/10 – 02/11)</option>
+              <option value="next">Tuần tới (03/11 – 09/11)</option>
+              <option value="month">Cả tháng này</option>
+            </select>
+          </div>
+
+          <!-- Nút nạp tiền nhanh -->
+          <button onclick="openDepositModal()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-plus-circle text-xs"></i>
+            <span class="hidden sm:inline">Nạp tiền</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW CONTAINER CHO CÁC TAB -->
+      <div class="p-4 sm:p-6 lg:p-8 flex-1">
+
+        <!-- ==================== VIEW 1: TRANG CHỦ (DASHBOARD) ==================== -->
+        <div id="tab-dashboard" class="tab-content space-y-6">
+          <!-- Header Lời Chào -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-2">
+                Xin chào, <span id="welcomeUserName" class="text-brand-600">Nhi Yen</span>! <span class="animate-bounce">👋</span>
+              </h2>
+              <p class="text-slate-500 text-sm mt-1">Chúc bạn một tuần học tập vui vẻ và chi tiêu thật hợp lý!</p>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <button onclick="switchTab('plan-setup')" class="px-4 py-2.5 bg-gradient-to-r from-brand-600 to-sky-500 hover:from-brand-700 hover:to-sky-600 text-white rounded-xl text-sm font-semibold shadow-md flex items-center gap-2 transition">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Tạo kế hoạch mới</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Thẻ tóm tắt tài chính (Cards) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Thẻ 1: Số tiền hiện có -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition">
+              <div class="relative z-10">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Số tiền hiện có</p>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-1" id="dashBalanceDisplay">1.500.000đ</h3>
+                <p class="text-xs text-emerald-600 font-medium mt-1 flex items-center gap-1">
+                  <i class="fa-solid fa-arrow-trend-up"></i> Có thể dùng trong 7 ngày
+                </p>
+              </div>
+              <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                <i class="fa-solid fa-wallet"></i>
+              </div>
+            </div>
+
+            <!-- Thẻ 2: Kỳ kế hoạch -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition">
+              <div class="relative z-10">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Kỳ kế hoạch</p>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 mt-1">Từ 27/10 – 02/11</h3>
+                <p class="text-xs text-brand-600 font-medium mt-1 flex items-center gap-1">
+                  <i class="fa-regular fa-calendar-check"></i> Đang áp dụng phân bổ tự động
+                </p>
+              </div>
+              <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                <i class="fa-solid fa-bullseye"></i>
+              </div>
+            </div>
+
+            <!-- Thẻ 3: Mục tiêu tiết kiệm -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between relative overflow-hidden group hover:shadow-md transition sm:col-span-2 lg:col-span-1">
+              <div class="relative z-10">
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Quỹ tiết kiệm / Dự phòng</p>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-emerald-600 mt-1" id="dashSavingsDisplay">300.000đ</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1">
+                  <i class="fa-solid fa-piggy-bank text-pink-500"></i> Đã trích 20% ngân sách
+                </p>
+              </div>
+              <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Khu vực Biểu đồ & Gợi ý hôm nay -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Biểu đồ tỷ lệ chi tiêu (Tổng quan) -->
+            <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <i class="fa-solid fa-chart-pie text-brand-600"></i>
+                  <span>Tổng quan chi tiêu đề xuất</span>
+                </h3>
+                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">Tỷ lệ 100%</span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 items-center gap-6 py-2">
+                <div class="relative w-44 h-44 mx-auto">
+                  <canvas id="expenseDoughnutChart"></canvas>
+                  <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span class="text-xl font-black text-slate-800">100%</span>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider">Phân bổ</span>
+                  </div>
+                </div>
+
+                <!-- Chú thích chi tiết -->
+                <div class="space-y-3 text-xs font-medium">
+                  <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded-full bg-sky-500"></span>
+                      <span>Ăn uống hàng ngày</span>
+                    </span>
+                    <span class="font-bold text-slate-700" id="legFood">35%</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded-full bg-blue-600"></span>
+                      <span>Đi lại / Xăng xe / Bus</span>
+                    </span>
+                    <span class="font-bold text-slate-700" id="legTransport">15%</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded-full bg-indigo-400"></span>
+                      <span>Sinh hoạt & Học tập</span>
+                    </span>
+                    <span class="font-bold text-slate-700" id="legLiving">30%</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                      <span>Tiết kiệm / Dự phòng</span>
+                    </span>
+                    <span class="font-bold text-slate-700" id="legSavings">20%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span>Ngân sách cân bằng tự động</span>
+                <button onclick="switchTab('plan-setup')" class="text-brand-600 font-semibold hover:underline">Chỉnh sửa phân bổ →</button>
+              </div>
+            </div>
+
+            <!-- Gợi ý hôm nay (Mascot Mèo Sinh Viên Dễ Thương) -->
+            <div class="lg:col-span-5 bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/70 shadow-sm flex flex-col justify-between relative overflow-hidden">
+              <div class="flex items-center gap-2.5 text-amber-600 font-bold text-sm">
+                <i class="fa-solid fa-lightbulb text-amber-500 text-base"></i>
+                <span>Gợi ý hôm nay</span>
+              </div>
+
+              <div class="my-4">
+                <p class="text-slate-800 text-sm font-semibold mb-1" id="catAdviceTitle">
+                  Bạn đang chi tiêu rất hợp lý! 🎉
+                </p>
+                <p class="text-slate-600 text-xs leading-relaxed" id="catAdviceBody">
+                  Hôm nay đã tiết kiệm được tiền trà sữa rồi đó. Nhớ duy trì bữa trưa dinh dưỡng tại căng-tin trường để vừa no vừa rẻ nhé!
+                </p>
+              </div>
+
+              <!-- Mascot Mèo Sinh Viên Vẽ Bằng SVG Tinh Xảo -->
+              <div class="flex justify-center items-end pt-2">
+                <div class="relative w-44 h-36">
+                  <!-- Mèo SVG thân thiện -->
+                  <svg viewBox="0 0 200 160" class="w-full h-full drop-shadow-sm">
+                    <!-- Hai tai -->
+                    <polygon points="50,60 70,15 95,50" fill="#cbd5e1" stroke="#475569" stroke-width="3" stroke-linejoin="round"/>
+                    <polygon points="58,55 70,26 88,48" fill="#fda4af"/>
+                    <polygon points="150,60 130,15 105,50" fill="#cbd5e1" stroke="#475569" stroke-width="3" stroke-linejoin="round"/>
+                    <polygon points="142,55 130,26 112,48" fill="#fda4af"/>
+                    
+                    <!-- Đầu mèo -->
+                    <ellipse cx="100" cy="85" rx="60" ry="48" fill="#ffffff" stroke="#475569" stroke-width="3"/>
+                    
+                    <!-- Mắt híp cười đáng yêu -->
+                    <path d="M 75 78 Q 85 70 93 78" fill="none" stroke="#334155" stroke-width="3.5" stroke-linecap="round"/>
+                    <path d="M 107 78 Q 115 70 125 78" fill="none" stroke="#334155" stroke-width="3.5" stroke-linecap="round"/>
+                    
+                    <!-- Má hồng -->
+                    <circle cx="70" cy="90" r="7" fill="#fecdd3" opacity="0.8"/>
+                    <circle cx="130" cy="90" r="7" fill="#fecdd3" opacity="0.8"/>
+                    
+                    <!-- Mũi & miệng mèo -->
+                    <polygon points="98,87 102,87 100,90" fill="#f43f5e"/>
+                    <path d="M 94 92 Q 100 97 100 92 Q 100 97 106 92" fill="none" stroke="#334155" stroke-width="2.5" stroke-linecap="round"/>
+                    
+                    <!-- Râu mèo -->
+                    <line x1="50" y1="84" x2="30" y2="80" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="50" y1="90" x2="32" y2="92" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="150" y1="84" x2="170" y2="80" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                    <line x1="150" y1="90" x2="168" y2="92" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                    
+                    <!-- Hai bàn tay bám mép bàn -->
+                    <path d="M 68 135 C 68 122 84 122 84 135 Z" fill="#ffffff" stroke="#475569" stroke-width="2.5"/>
+                    <path d="M 116 135 C 116 122 132 122 132 135 Z" fill="#ffffff" stroke="#475569" stroke-width="2.5"/>
+
+                    <!-- Tim nhỏ bay xung quanh -->
+                    <path d="M 160 40 Q 165 35 170 40 Q 175 35 180 40 Q 170 55 170 55 Z" fill="#f43f5e" opacity="0.75" class="animate-pulse"/>
+                    <path d="M 25 50 Q 28 46 32 50 Q 36 46 40 50 Q 32 62 32 62 Z" fill="#38bdf8" opacity="0.65"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="mt-2 text-center">
+                <span class="inline-block text-[11px] font-medium text-brand-700 bg-white/70 px-3 py-1 rounded-full shadow-xs">
+                  Cố gắng giữ vững phong độ nhé 💙
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danh sách giao dịch gần đây mô phỏng -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
+                <span>Giao dịch chi tiêu gần đây</span>
+              </h3>
+              <button onclick="switchTab('plan-result')" class="text-xs text-brand-600 font-semibold hover:underline">Xem kế hoạch chi tiết →</button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="text-slate-400 border-b border-slate-100 uppercase tracking-wider">
+                    <th class="pb-3 font-semibold">Thời gian</th>
+                    <th class="pb-3 font-semibold">Hạng mục chi</th>
+                    <th class="pb-3 font-semibold">Tài khoản / Nguồn</th>
+                    <th class="pb-3 font-semibold text-right">Số tiền</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-600">
+                  <tr class="hover:bg-slate-50/70">
+                    <td class="py-3">Hôm nay, 11:45</td>
+                    <td class="py-3 font-medium text-slate-800 flex items-center gap-2">
+                      <span class="w-6 h-6 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-xs"><i class="fa-solid fa-utensils"></i></span>
+                      Ăn trưa cơm sườn căng-tin
+                    </td>
+                    <td class="py-3">Ví Sinh Viên</td>
+                    <td class="py-3 text-right font-bold text-rose-500">-35.000đ</td>
+                  </tr>
+                  <tr class="hover:bg-slate-50/70">
+                    <td class="py-3">Hôm qua, 18:20</td>
+                    <td class="py-3 font-medium text-slate-800 flex items-center gap-2">
+                      <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs"><i class="fa-solid fa-gas-pump"></i></span>
+                      Đổ xăng xe máy Wave Alpha
+                    </td>
+                    <td class="py-3">MB Bank (*8899)</td>
+                    <td class="py-3 text-right font-bold text-rose-500">-50.000đ</td>
+                  </tr>
+                  <tr class="hover:bg-slate-50/70">
+                    <td class="py-3">27/10, 09:15</td>
+                    <td class="py-3 font-medium text-slate-800 flex items-center gap-2">
+                      <span class="w-6 h-6 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs"><i class="fa-solid fa-print"></i></span>
+                      In tài liệu môn Kinh Tế Vi Mô
+                    </td>
+                    <td class="py-3">Ví Sinh Viên</td>
+                    <td class="py-3 text-right font-bold text-rose-500">-20.000đ</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VIEW 2: LẬP KẾ HOẠCH CHI TIÊU THÔNG MINH ==================== -->
+        <div id="tab-plan-setup" class="tab-content hidden space-y-6">
+          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm max-w-4xl mx-auto">
+            
+            <div class="border-b border-slate-100 pb-5 mb-6">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center text-lg">
+                  <i class="fa-regular fa-calendar-plus"></i>
+                </div>
+                <div>
+                  <h2 class="text-xl sm:text-2xl font-bold text-slate-800">Lập kế hoạch chi tiêu</h2>
+                  <p class="text-xs sm:text-sm text-slate-500">Hãy nhập số tiền và chọn các khoản bạn cần chi trong tháng/tuần này nhé!</p>
+                </div>
+              </div>
+            </div>
+
+            <form id="planForm" onsubmit="generateSmartPlan(event)" class="space-y-6">
+              
+              <!-- Khung nhập số tiền & chu kỳ -->
+              <div class="p-5 bg-gradient-to-r from-blue-50/70 to-indigo-50/40 rounded-2xl border border-blue-100/80">
+                <p class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Bạn có bao nhiêu tiền cho đợt này?</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                  <!-- Radio chọn kỳ -->
+                  <div class="md:col-span-5 flex items-center gap-6">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 cursor-pointer">
+                      <input type="radio" name="planCycle" value="week" checked class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+                      <span>Theo tuần (7 ngày)</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 cursor-pointer">
+                      <input type="radio" name="planCycle" value="month" class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+                      <span>Theo tháng (30 ngày)</span>
+                    </label>
+                  </div>
+
+                  <!-- Input nhập tiền -->
+                  <div class="md:col-span-7 relative">
+                    <input type="number" id="budgetAmount" required min="50000" step="10000" value="1500000" 
+                           class="w-full pl-4 pr-12 py-3 rounded-xl border border-slate-300 font-bold text-slate-800 text-lg focus:outline-none focus:ring-2 focus:ring-brand-500 transition shadow-inner">
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-sm">đ</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Danh mục chi tiêu sinh viên phong phú -->
+              <div>
+                <div class="flex items-center justify-between mb-3">
+                  <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Chọn các khoản chi tiêu (Hệ thống sẽ tự phân bổ theo ngày):
+                  </label>
+                  <span class="text-[11px] text-slate-400">Có thể bỏ qua các mục không cần thiết</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  
+                  <!-- Mục 1: Ăn uống -->
+                  <label class="category-card p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white cursor-pointer transition flex items-start gap-3 shadow-xs">
+                    <input type="checkbox" id="cat_food" checked class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                        <i class="fa-solid fa-utensils text-amber-500"></i>
+                        <span>Ăn uống</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400 mt-0.5">Ăn sáng, trưa, tối hằng ngày</p>
+                    </div>
+                  </label>
+
+                  <!-- Mục 2: Đi lại -->
+                  <div class="p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white transition flex flex-col justify-between shadow-xs">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" id="cat_transport" checked class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                      <div>
+                        <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                          <i class="fa-solid fa-motorcycle text-blue-500"></i>
+                          <span>Đi lại / Xăng xe</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Xăng xe máy, vé xe buýt</p>
+                      </div>
+                    </label>
+                    <div class="mt-2.5 flex items-center gap-2 text-xs">
+                      <span class="text-slate-500 text-[11px]">Số km dự kiến:</span>
+                      <input type="number" id="transportKm" value="30" class="w-16 px-2 py-1 rounded-lg border border-slate-200 text-center font-bold text-xs">
+                      <span class="text-slate-400 text-[11px]">km/tuần</span>
+                    </div>
+                  </div>
+
+                  <!-- Mục 3: Tiết kiệm -->
+                  <label class="category-card p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white cursor-pointer transition flex items-start gap-3 shadow-xs">
+                    <input type="checkbox" id="cat_savings" checked class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                        <i class="fa-solid fa-piggy-bank text-emerald-500"></i>
+                        <span>Tiết kiệm mục tiêu</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400 mt-0.5">Tích lũy 10% - 20% dự phòng</p>
+                    </div>
+                  </label>
+
+                  <!-- Mục 4: Đóng trọ / KTX -->
+                  <div class="p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white transition flex flex-col justify-between shadow-xs">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" id="cat_rent" class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                      <div>
+                        <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                          <i class="fa-solid fa-house-user text-purple-500"></i>
+                          <span>Đóng tiền trọ / KTX</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Khoản cố định trong kỳ</p>
+                      </div>
+                    </label>
+                    <div class="mt-2.5 flex items-center gap-1.5 text-xs">
+                      <span class="text-slate-500 text-[11px]">Tiền trọ:</span>
+                      <input type="number" id="rentAmount" value="800000" step="50000" class="w-24 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-xs">
+                      <span class="text-slate-400 text-[11px]">đ</span>
+                    </div>
+                  </div>
+
+                  <!-- Mục 5: Tiền điện nước, Wifi -->
+                  <div class="p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white transition flex flex-col justify-between shadow-xs">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" id="cat_utilities" class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                      <div>
+                        <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                          <i class="fa-solid fa-bolt text-amber-500"></i>
+                          <span>Tiền điện nước / 4G</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Chi phí hóa đơn phòng</p>
+                      </div>
+                    </label>
+                    <div class="mt-2.5 flex items-center gap-1.5 text-xs">
+                      <span class="text-slate-500 text-[11px]">Ước tính:</span>
+                      <input type="number" id="utilitiesAmount" value="150000" step="10000" class="w-24 px-2 py-1 rounded-lg border border-slate-200 text-right font-bold text-xs">
+                      <span class="text-slate-400 text-[11px]">đ</span>
+                    </div>
+                  </div>
+
+                  <!-- Mục 6: Giáo trình & Đồ dùng học tập -->
+                  <label class="category-card p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white cursor-pointer transition flex items-start gap-3 shadow-xs">
+                    <input type="checkbox" id="cat_study" checked class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                        <i class="fa-solid fa-book-open text-sky-500"></i>
+                        <span>Giáo trình / In ấn</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400 mt-0.5">Photo tài liệu, bút vở học tập</p>
+                    </div>
+                  </label>
+
+                  <!-- Mục 7: Cà phê, trà sữa, hẹn hò bạn bè -->
+                  <label class="category-card p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white cursor-pointer transition flex items-start gap-3 shadow-xs">
+                    <input type="checkbox" id="cat_social" checked class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                        <i class="fa-solid fa-mug-hot text-amber-700"></i>
+                        <span>Cà phê / Trà sữa / Đi chơi</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400 mt-0.5">Gặp gỡ bạn bè cuối tuần</p>
+                    </div>
+                  </label>
+
+                  <!-- Mục 8: Sinh hoạt khác -->
+                  <label class="category-card p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white cursor-pointer transition flex items-start gap-3 shadow-xs">
+                    <input type="checkbox" id="cat_daily" checked class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                        <i class="fa-solid fa-basket-shopping text-pink-500"></i>
+                        <span>Sinh hoạt cá nhân</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400 mt-0.5">Xà phòng, kem đánh răng, giặt ủi</p>
+                    </div>
+                  </label>
+
+                  <!-- Mục 9: Tùy biến khác -->
+                  <div class="p-3.5 rounded-2xl border border-slate-200 hover:border-brand-400 bg-white transition flex flex-col justify-between shadow-xs">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" id="cat_custom" class="mt-1 w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+                      <div>
+                        <div class="flex items-center gap-2 font-semibold text-slate-800 text-sm">
+                          <i class="fa-solid fa-ellipsis text-slate-500"></i>
+                          <span>Khoản khác...</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Chi phí dự phòng đột xuất</p>
+                      </div>
+                    </label>
+                    <input type="text" id="customCatName" placeholder="Tên khoản (vd: Quỹ lớp)" class="mt-2 px-2.5 py-1 text-xs rounded-lg border border-slate-200 focus:outline-none">
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Nút hành động Tạo Kế Hoạch -->
+              <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button type="submit" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 text-sm transition active:scale-95">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  <span>Tự động tạo kế hoạch hằng ngày</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- ==================== VIEW 3: KẾT QUẢ KẾ HOẠCH TỪNG NGÀY ==================== -->
+        <div id="tab-plan-result" class="tab-content hidden space-y-6">
+          <div id="print-area" class="space-y-6">
+            
+            <!-- Banner thành công -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div class="flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                  <h2 class="text-xl sm:text-2xl font-bold text-slate-800">Kế hoạch chi tiêu của bạn</h2>
+                  <p class="text-xs sm:text-sm text-slate-500">Chi tiêu hợp lý – Sống thoải mái – Tự tin cuối tháng!</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button onclick="window.print()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-2 transition flex-1 sm:flex-none">
+                  <i class="fa-solid fa-file-pdf text-rose-500"></i>
+                  <span>Tải xuống / In PDF</span>
+                </button>
+                <button onclick="switchTab('plan-setup')" class="px-4 py-2.5 bg-brand-50 hover:bg-brand-100 text-brand-700 font-semibold rounded-xl text-xs flex items-center justify-center gap-2 transition flex-1 sm:flex-none">
+                  <i class="fa-solid fa-sliders"></i>
+                  <span>Điều chỉnh lại</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 3 Thẻ tóm tắt kế hoạch -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-xs flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                  <i class="fa-solid fa-coins"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-400 font-semibold uppercase">Tổng ngân sách</p>
+                  <p class="text-lg sm:text-xl font-extrabold text-slate-800 mt-0.5" id="resTotalBudget">1.500.000đ</p>
+                </div>
+              </div>
+
+              <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-xs flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                  <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-400 font-semibold uppercase">Chi tiêu dự kiến</p>
+                  <p class="text-lg sm:text-xl font-extrabold text-blue-600 mt-0.5" id="resTotalExpense">1.300.000đ</p>
+                </div>
+              </div>
+
+              <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-xs flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                  <i class="fa-solid fa-piggy-bank"></i>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-400 font-semibold uppercase">Tiết kiệm / Dự phòng</p>
+                  <p class="text-lg sm:text-xl font-extrabold text-emerald-600 mt-0.5" id="resSavingsAmount">200.000đ</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- BẢNG KẾ HOẠCH CHI TIÊU TỪNG NGÀY THỰC TẾ -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+              <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="fa-regular fa-calendar-days text-brand-600"></i>
+                  <h3 class="font-bold text-slate-800 text-sm sm:text-base">Kế hoạch chi tiêu từng ngày (Thứ 2 đến Chủ nhật)</h3>
+                </div>
+                <span class="text-xs text-brand-600 bg-brand-50 px-3 py-1 rounded-full font-semibold">
+                  Tự động cân đối theo ngày
+                </span>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs sm:text-sm">
+                  <thead class="bg-slate-50/80 text-slate-600 uppercase text-[11px] font-semibold border-b border-slate-200">
+                    <tr>
+                      <th class="py-3.5 px-4">Ngày</th>
+                      <th class="py-3.5 px-4 text-center">Ăn uống</th>
+                      <th class="py-3.5 px-4 text-center">Đi lại</th>
+                      <th class="py-3.5 px-4 text-center">Trọ / Điện nước</th>
+                      <th class="py-3.5 px-4 text-center">Học tập & Bạn bè</th>
+                      <th class="py-3.5 px-4 text-center">Khác</th>
+                      <th class="py-3.5 px-4 text-right font-bold">Tổng chi ngày</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dailyPlanTableBody" class="divide-y divide-slate-100 text-slate-700">
+                    <!-- Javascript sẽ tự động chèn dữ liệu bảng tại đây -->
+                  </tbody>
+                  <tfoot class="bg-slate-50 font-bold text-slate-800 border-t-2 border-slate-200 text-xs sm:text-sm">
+                    <tr>
+                      <td class="py-3.5 px-4">TỔNG CỘNG TUẦN</td>
+                      <td class="py-3.5 px-4 text-center text-amber-600" id="footFoodTotal">0đ</td>
+                      <td class="py-3.5 px-4 text-center text-blue-600" id="footTransportTotal">0đ</td>
+                      <td class="py-3.5 px-4 text-center text-purple-600" id="footFixedTotal">0đ</td>
+                      <td class="py-3.5 px-4 text-center text-indigo-600" id="footSocialTotal">0đ</td>
+                      <td class="py-3.5 px-4 text-center text-slate-600" id="footOtherTotal">0đ</td>
+                      <td class="py-3.5 px-4 text-right text-brand-700 text-base font-extrabold" id="footGrandTotal">0đ</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Thông báo cam kết -->
+            <div class="p-4 rounded-2xl bg-brand-50 border border-brand-200/60 flex items-center gap-3 text-brand-900 text-xs sm:text-sm">
+              <i class="fa-solid fa-circle-check text-brand-600 text-lg"></i>
+              <span>Bạn đã phân bổ chi tiêu hợp lý trong ngân sách của mình! Đừng quên ghi chép lại sau mỗi bữa ăn nhé 💙</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================== VIEW 4: LIÊN KẾT NGÂN HÀNG (TÍNH NĂNG MỚI THEO YÊU CẦU) ==================== -->
+        <div id="tab-banking" class="tab-content hidden space-y-6">
+          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+              <div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-800 flex items-center gap-2">
+                  <i class="fa-solid fa-building-columns text-brand-600"></i>
+                  <span>Liên kết tài khoản ngân hàng & Ví điện tử</span>
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">Kết nối tài khoản ngân hàng để tự động nạp tiền và quản lý tài chính chuẩn xác.</p>
+              </div>
+
+              <button onclick="openBankLinkModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-2 transition active:scale-95">
+                <i class="fa-solid fa-link"></i>
+                <span>Thêm tài khoản mới</span>
+              </button>
+            </div>
+
+            <!-- Danh sách tài khoản đã kết nối -->
+            <div class="mt-6">
+              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Tài khoản & Ví đã liên kết</h3>
+              
+              <div id="linkedAccountsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Thẻ MB Bank mặc định -->
+                <div class="p-5 rounded-2xl bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 text-white shadow-md relative overflow-hidden flex flex-col justify-between h-48 border border-blue-600">
+                  <div class="flex items-center justify-between relative z-10">
+                    <div class="flex items-center gap-2">
+                      <span class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center font-black text-xs tracking-wider">MB</span>
+                      <span class="font-bold text-sm">MB Bank</span>
+                    </div>
+                    <span class="text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full font-semibold">Đang hoạt động</span>
+                  </div>
+
+                  <div class="relative z-10 my-auto">
+                    <p class="text-[10px] text-blue-200 uppercase tracking-wider">Số tài khoản</p>
+                    <p class="text-base font-mono tracking-widest font-semibold">•••• •••• •••• 8899</p>
+                  </div>
+
+                  <div class="flex items-center justify-between relative z-10 pt-2 border-t border-white/10 text-xs">
+                    <div>
+                      <span class="text-[10px] text-blue-200">Chủ thẻ: </span>
+                      <span class="font-bold" id="bankCardOwner">NHI YEN</span>
+                    </div>
+                    <button onclick="quickDepositFromBank('MB Bank (*8899)', 200000)" class="px-2.5 py-1 bg-white text-blue-900 font-bold rounded-lg text-[11px] hover:bg-blue-50 transition">
+                      Nạp 200k
+                    </button>
+                  </div>
+
+                  <!-- Hoa văn trang trí -->
+                  <div class="absolute -right-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
+                </div>
+
+                <!-- Thẻ Ví MoMo -->
+                <div class="p-5 rounded-2xl bg-gradient-to-br from-pink-600 via-pink-700 to-rose-700 text-white shadow-md relative overflow-hidden flex flex-col justify-between h-48 border border-pink-500">
+                  <div class="flex items-center justify-between relative z-10">
+                    <div class="flex items-center gap-2">
+                      <span class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center font-bold text-xs">MOMO</span>
+                      <span class="font-bold text-sm">Ví MoMo</span>
+                    </div>
+                    <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold">Đã xác thực</span>
+                  </div>
+
+                  <div class="relative z-10 my-auto">
+                    <p class="text-[10px] text-pink-200 uppercase tracking-wider">Số điện thoại liên kết</p>
+                    <p class="text-base font-mono tracking-widest font-semibold">0987 ••• 321</p>
+                  </div>
+
+                  <div class="flex items-center justify-between relative z-10 pt-2 border-t border-white/10 text-xs">
+                    <div>
+                      <span class="text-[10px] text-pink-200">Ví sinh viên</span>
+                    </div>
+                    <button onclick="quickDepositFromBank('MoMo', 100000)" class="px-2.5 py-1 bg-white text-pink-900 font-bold rounded-lg text-[11px] hover:bg-pink-50 transition">
+                      Nạp 100k
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Thêm ngân hàng nhanh -->
+                <div onclick="openBankLinkModal()" class="p-5 rounded-2xl border-2 border-dashed border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 transition flex flex-col items-center justify-center cursor-pointer text-center h-48 group">
+                  <div class="w-12 h-12 rounded-full bg-slate-100 group-hover:bg-brand-100 text-slate-400 group-hover:text-brand-600 flex items-center justify-center text-lg mb-2 transition">
+                    <i class="fa-solid fa-plus"></i>
+                  </div>
+                  <p class="font-bold text-xs text-slate-700 group-hover:text-brand-600">Thêm thẻ / Tài khoản mới</p>
+                  <p class="text-[11px] text-slate-400 mt-1">Vietcombank, Techcombank, TPBank...</p>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Các ngân hàng hỗ trợ liên kết trực tiếp -->
+            <div class="mt-8 pt-6 border-t border-slate-100">
+              <h4 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-4">Ngân hàng hỗ trợ cho sinh viên</h4>
+              <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                <div onclick="selectBankToLink('Vietcombank')" class="p-3 border border-slate-200 hover:border-brand-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:shadow-xs transition bg-slate-50/50">
+                  <i class="fa-solid fa-building-columns text-emerald-600 text-lg"></i>
+                  <span class="text-xs font-semibold text-slate-700">Vietcombank</span>
+                </div>
+                <div onclick="selectBankToLink('Techcombank')" class="p-3 border border-slate-200 hover:border-brand-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:shadow-xs transition bg-slate-50/50">
+                  <i class="fa-solid fa-building-columns text-rose-600 text-lg"></i>
+                  <span class="text-xs font-semibold text-slate-700">Techcombank</span>
+                </div>
+                <div onclick="selectBankToLink('TPBank')" class="p-3 border border-slate-200 hover:border-brand-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:shadow-xs transition bg-slate-50/50">
+                  <i class="fa-solid fa-building-columns text-purple-600 text-lg"></i>
+                  <span class="text-xs font-semibold text-slate-700">TPBank</span>
+                </div>
+                <div onclick="selectBankToLink('VPBank')" class="p-3 border border-slate-200 hover:border-brand-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:shadow-xs transition bg-slate-50/50">
+                  <i class="fa-solid fa-building-columns text-green-600 text-lg"></i>
+                  <span class="text-xs font-semibold text-slate-700">VPBank</span>
+                </div>
+                <div onclick="selectBankToLink('Agribank')" class="p-3 border border-slate-200 hover:border-brand-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:shadow-xs transition bg-slate-50/50">
+                  <i class="fa-solid fa-building-columns text-red-700 text-lg"></i>
+                  <span class="text-xs font-semibold text-slate-700">Agribank</span>
+                </div>
+                <div onclick="selectBankToLink('ZaloPay')" class="p-3 border border-slate-200 hover:border-brand-500 rounded-xl flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:shadow-xs transition bg-slate-50/50">
+                  <i class="fa-solid fa-wallet text-sky-500 text-lg"></i>
+                  <span class="text-xs font-semibold text-slate-700">ZaloPay</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================== VIEW 5: THỐNG KÊ CHI TIẾT ==================== -->
+        <div id="tab-statistics" class="tab-content hidden space-y-6">
+          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 mb-2">Thống kê & Đánh giá tài chính</h2>
+            <p class="text-xs sm:text-sm text-slate-500 mb-6">Theo dõi thói quen chi tiêu giúp bạn luôn chủ động tài chính suốt kỳ học.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                <h4 class="text-sm font-bold text-slate-700 mb-3">Tốc độ tiêu tiền trong tuần</h4>
+                <div class="space-y-3">
+                  <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                      <span>Đã tiêu 4 ngày đầu tuần</span>
+                      <span class="text-brand-600">45%</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-brand-500 rounded-full" style="width: 45%"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                      <span>Ngân sách cho 3 ngày cuối tuần</span>
+                      <span class="text-emerald-600">55% còn lại</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-emerald-500 rounded-full" style="width: 55%"></div>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-4 italic">
+                  💡 Mẹo: Bạn có thể để dành 1 khoản nhỏ cho ngày Thứ 7 để đi ăn cùng bạn cùng phòng!
+                </p>
+              </div>
+
+              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
+                <h4 class="text-sm font-bold text-slate-700 mb-2">Xếp loại quản lý chi tiêu</h4>
+                <div class="flex items-center gap-4 my-2">
+                  <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-3xl font-black">
+                    A+
+                  </div>
+                  <div>
+                    <p class="font-bold text-slate-800 text-sm">Sinh viên gương mẫu!</p>
+                    <p class="text-xs text-slate-500">Bạn duy trì thặng dư tiết kiệm trên 15% đều đặn.</p>
+                  </div>
+                </div>
+                <button onclick="switchTab('plan-setup')" class="w-full py-2 bg-brand-600 text-white rounded-xl text-xs font-semibold hover:bg-brand-700 transition">
+                  Tối ưu lại kế hoạch tháng mới
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================== VIEW 6: CÀI ĐẶT ==================== -->
+        <div id="tab-settings" class="tab-content hidden space-y-6">
+          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm max-w-2xl">
+            <h2 class="text-xl sm:text-2xl font-bold text-slate-800 mb-6">Cài đặt cá nhân</h2>
+            <div class="space-y-4 text-sm">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Tên hiển thị</label>
+                <input type="text" id="settingNameInput" value="Nhi Yen" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Trường Đại Học / Cao Đẳng</label>
+                <input type="text" value="Đại học Quốc Gia" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">
+              </div>
+              <div class="pt-2">
+                <button onclick="saveSettings()" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition">
+                  Lưu thay đổi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+
+  <!-- ==================== MODAL LIÊN KẾT NGÂN HÀNG (GIẢ LẬP AN TOÀN) ==================== -->
+  <div id="bankLinkModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100">
+      <div class="p-6 bg-gradient-to-r from-brand-600 to-indigo-600 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-building-columns text-xl"></i>
+          <h3 class="font-bold text-base">Liên kết ngân hàng</h3>
+        </div>
+        <button onclick="closeBankLinkModal()" class="text-white/80 hover:text-white">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="linkBankForm" onsubmit="handleConfirmLinkBank(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Ngân hàng</label>
+          <select id="modalBankName" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            <option value="Vietcombank">Vietcombank - Ngân hàng Ngoại thương</option>
+            <option value="MB Bank" selected>MB Bank - Quân Đội</option>
+            <option value="Techcombank">Techcombank - Kỹ Thương</option>
+            <option value="TPBank">TPBank - Tiên Phong</option>
+            <option value="VPBank">VPBank - Việt Nam Thịnh Vượng</option>
+            <option value="Agribank">Agribank - Nông nghiệp</option>
+            <option value="MoMo">Ví điện tử MoMo</option>
+            <option value="ZaloPay">Ví ZaloPay</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Số tài khoản / Số thẻ ATM</label>
+          <input type="text" id="modalBankAccNum" required placeholder="Nhập số tài khoản hoặc số thẻ" value="1038492049" 
+                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Tên chủ tài khoản (Không dấu)</label>
+          <input type="text" id="modalBankAccName" required placeholder="VD: NGUYEN VAN A" value="NHI YEN" 
+                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm uppercase focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="p-3 bg-blue-50 rounded-xl text-[11px] text-blue-700 flex items-start gap-2">
+          <i class="fa-solid fa-shield-cat mt-0.5 text-blue-600"></i>
+          <span>Mô phỏng môi trường sandbox sinh viên: Không yêu cầu OTP thật và không phát sinh phí.</span>
+        </div>
+
+        <div class="pt-2 flex gap-3">
+          <button type="button" onclick="closeBankLinkModal()" class="flex-1 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl text-xs hover:bg-slate-50 transition">
+            Hủy
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
+            Xác nhận liên kết
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ==================== MODAL NẠP TIỀN VÀO VÍ ==================== -->
+  <div id="depositModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-circle-arrow-down text-emerald-500"></i>
+          <span>Nạp tiền vào Ví</span>
+        </h3>
+        <button onclick="closeDepositModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Nguồn tiền nạp</label>
+        <select id="depositSource" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold">
+          <option>MB Bank (*8899)</option>
+          <option>Ví MoMo (*0321)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Số tiền muốn nạp</label>
+        <div class="grid grid-cols-3 gap-2 mb-2">
+          <button type="button" onclick="setDepositAmount(100000)" class="py-1.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 font-bold text-xs rounded-lg transition">100k</button>
+          <button type="button" onclick="setDepositAmount(200000)" class="py-1.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 font-bold text-xs rounded-lg transition">200k</button>
+          <button type="button" onclick="setDepositAmount(500000)" class="py-1.5 bg-slate-100 hover:bg-brand-50 hover:text-brand-600 font-bold text-xs rounded-lg transition">500k</button>
+        </div>
+        <input type="number" id="depositAmountInput" value="200000" step="50000" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold">
+      </div>
+
+      <button onclick="confirmDeposit()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition">
+        Nạp ngay
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ==================== TOAST THÔNG BÁO NHẸ ==================== -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center gap-2 transform translate-y-20 opacity-0 transition duration-300 pointer-events-none">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">Thao tác thành công!</span>
+  </div>
+
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    // State của ứng dụng
+    let currentUserName = "Nhi Yen";
+    let walletBalance = 1500000;
+    let doughnutChart = null;
+
+    // Dữ liệu kế hoạch tính toán hiện tại
+    let currentPlan = {
+      budget: 1500000,
+      cycle: 'week',
+      totalExpense: 1500000,
+      savings: 0,
+      dailyBreakdown: []
+    };
+
+    // Khởi chạy khi DOM load
+    window.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      // Chạy tính toán phân bổ mặc định
+      calculateAndRenderPlan(1500000, 'week', {
+        food: true,
+        transport: true,
+        savings: true,
+        rent: false,
+        utilities: false,
+        study: true,
+        social: true,
+        daily: true,
+        custom: false,
+        rentAmount: 800000,
+        utilitiesAmount: 150000,
+        customText: ""
+      });
+    });
+
+    // 1. Quản lý Đăng Nhập / Đăng Xuất
+    function handleLogin(e) {
+      if (e) e.preventDefault();
+      const nameInput = document.getElementById('loginUsername').value.trim();
+      if (nameInput) {
+        currentUserName = nameInput;
+      }
+      document.getElementById('welcomeUserName').innerText = currentUserName;
+      document.getElementById('sidebarUserName').innerText = currentUserName;
+      document.getElementById('bankCardOwner').innerText = currentUserName.toUpperCase();
+      document.getElementById('userAvatarText').innerText = currentUserName.substring(0, 2).toUpperCase();
+      
+      // Ẩn Auth Screen
+      document.getElementById('authScreen').classList.add('hidden');
+      showToast(`Xin chào ${currentUserName}! Đăng nhập thành công.`);
+    }
+
+    function handleLogout() {
+      document.getElementById('authScreen').classList.remove('hidden');
+      showToast('Đã đăng xuất khỏi Ví Sinh Viên.');
+    }
+
+    function togglePasswordVisibility() {
+      const pass = document.getElementById('loginPassword');
+      const icon = document.getElementById('eyeIcon');
+      if (pass.type === 'password') {
+        pass.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        pass.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    // 2. Chuyển đổi tab điều hướng
+    function switchTab(tabId) {
+      // Ẩn tất cả tab-content
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      // Hiện tab được chọn
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.remove('hidden');
+
+      // Cập nhật trạng thái active trên sidebar
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+        btn.classList.add('text-slate-400');
+      });
+      const activeBtn = document.getElementById('nav-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+        activeBtn.classList.remove('text-slate-400');
+      }
+
+      // Nếu chuyển vào Dashboard, resize chart để hiển thị chuẩn
+      if (tabId === 'dashboard' && doughnutChart) {
+        setTimeout(() => doughnutChart.resize(), 100);
+      }
+    }
+
+    // 3. Khởi tạo Biểu đồ Doughnut Chart.js
+    function initChart() {
+      const ctx = document.getElementById('expenseDoughnutChart').getContext('2d');
+      doughnutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Ăn uống', 'Đi lại', 'Sinh hoạt & Học tập', 'Tiết kiệm'],
+          datasets: [{
+            data: [35, 15, 30, 20],
+            backgroundColor: [
+              '#38bdf8', // sky-400
+              '#2563eb', // blue-600
+              '#818cf8', // indigo-400
+              '#34d399'  // emerald-400
+            ],
+            borderWidth: 0,
+            hoverOffset: 4
+          }]
+        },
+        options: {
+          cutout: '72%',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ` ${context.label}: ${context.raw}%`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // 4. LOGIC THÔNG MINH: TỰ ĐỘNG TÍNH TOÁN & PHÂN BỔ KẾ HOẠCH HẰNG NGÀY
+    function generateSmartPlan(e) {
+      if (e) e.preventDefault();
+
+      const budget = parseFloat(document.getElementById('budgetAmount').value) || 1500000;
+      const cycleRadio = document.querySelector('input[name="planCycle"]:checked');
+      const cycle = cycleRadio ? cycleRadio.value : 'week';
+
+      // Trạng thái các checkbox
+      const options = {
+        food: document.getElementById('cat_food').checked,
+        transport: document.getElementById('cat_transport').checked,
+        savings: document.getElementById('cat_savings').checked,
+        rent: document.getElementById('cat_rent').checked,
+        utilities: document.getElementById('cat_utilities').checked,
+        study: document.getElementById('cat_study').checked,
+        social: document.getElementById('cat_social').checked,
+        daily: document.getElementById('cat_daily').checked,
+        custom: document.getElementById('cat_custom').checked,
+        rentAmount: parseFloat(document.getElementById('rentAmount').value) || 0,
+        utilitiesAmount: parseFloat(document.getElementById('utilitiesAmount').value) || 0,
+        customText: document.getElementById('customCatName').value.trim()
+      };
+
+      calculateAndRenderPlan(budget, cycle, options);
+      
+      // Tự động chuyển qua tab kết quả kế hoạch
+      switchTab('plan-result');
+      showToast('Kế hoạch đã được tự động sinh chi tiết từng ngày!');
+    }
+
+    function calculateAndRenderPlan(budget, cycle, opt) {
+      // Ngày trong tuần
+      const days = [
+        { name: 'Thứ 2', date: '27/10', isWeekend: false, payRentDay: false },
+        { name: 'Thứ 3', date: '28/10', isWeekend: false, payRentDay: false },
+        { name: 'Thứ 4', date: '29/10', isWeekend: false, payRentDay: false },
+        { name: 'Thứ 5', date: '30/10', isWeekend: false, payRentDay: true }, // Ngày giả định nộp tiền cố định
+        { name: 'Thứ 6', date: '31/10', isWeekend: false, payRentDay: false },
+        { name: 'Thứ 7', date: '01/11', isWeekend: true, payRentDay: false },
+        { name: 'CN',    date: '02/11', isWeekend: true, payRentDay: false }
+      ];
+
+      // 1. Phân bổ Tiết kiệm nếu chọn
+      let savingsVal = 0;
+      if (opt.savings) {
+        savingsVal = Math.round(budget * 0.15 / 10000) * 10000; // 15%
+      }
+
+      // Ngân sách còn lại để chi tiêu thực tế
+      let spendableBudget = budget - savingsVal;
+
+      // 2. Chi phí cố định (Tiền trọ, Điện nước)
+      let fixedRent = (opt.rent) ? opt.rentAmount : 0;
+      let fixedUtilities = (opt.utilities) ? opt.utilitiesAmount : 0;
+      let totalFixed = fixedRent + fixedUtilities;
+
+      // Tiền dành cho sinh hoạt hàng ngày
+      let flexibleBudget = spendableBudget - totalFixed;
+      if (flexibleBudget < 0) {
+        flexibleBudget = spendableBudget * 0.5; // Bảo đảm an toàn số học
+      }
+
+      // 3. Phân chia tỷ trọng cho các hạng mục linh hoạt
+      // Tiền ăn mỗi ngày (Ưu tiên số 1): chiếm khoảng 50% tiền linh hoạt
+      let totalFoodBudget = opt.food ? (flexibleBudget * 0.55) : 0;
+      let dailyFoodBase = Math.round((totalFoodBudget / 7) / 5000) * 5000;
+      if (dailyFoodBase < 30000 && opt.food) dailyFoodBase = 35000; // Tối thiểu bữa ăn sv
+
+      // Đi lại: ~15%
+      let totalTransBudget = opt.transport ? (flexibleBudget * 0.15) : 0;
+      let dailyTransBase = Math.round((totalTransBudget / 7) / 5000) * 5000;
+
+      // Học tập & Bạn bè (Thứ 7 & CN chi nhiều hơn ngày thường)
+      let totalSocialBudget = (opt.social || opt.study) ? (flexibleBudget * 0.20) : 0;
+
+      // Sinh hoạt khác & Dự phòng
+      let totalOtherBudget = (opt.daily || opt.custom) ? (flexibleBudget * 0.10) : 0;
+
+      // Xây dựng danh sách từng ngày
+      let tableRowsHtml = "";
+      let sumFood = 0;
+      let sumTrans = 0;
+      let sumFixed = 0;
+      let sumSocial = 0;
+      let sumOther = 0;
+      let grandTotal = 0;
+
+      days.forEach(day => {
+        // Ăn uống: cuối tuần ăn đổi món nhiều hơn 1 chút
+        let dayFood = opt.food ? (day.isWeekend ? dailyFoodBase + 10000 : dailyFoodBase) : 0;
+        
+        // Đi lại: cuối tuần đi ít hơn nếu ở phòng
+        let dayTrans = opt.transport ? (day.isWeekend ? Math.max(0, dailyTransBase - 5000) : dailyTransBase) : 0;
+
+        // Cố định: trọ & điện gom vào ngày giữa tuần (Thứ 5)
+        let dayFixed = 0;
+        if (day.payRentDay) {
+          dayFixed = totalFixed;
+        }
+
+        // Học tập & Bạn bè (Cuối tuần tụ tập cà phê)
+        let daySocial = 0;
+        if (opt.social || opt.study) {
+          daySocial = day.isWeekend ? 35000 : 10000;
+        }
+
+        // Khác
+        let dayOther = (opt.daily || opt.custom) ? 10000 : 0;
+
+        let dayTotal = dayFood + dayTrans + dayFixed + daySocial + dayOther;
+
+        sumFood += dayFood;
+        sumTrans += dayTrans;
+        sumFixed += dayFixed;
+        sumSocial += daySocial;
+        sumOther += dayOther;
+        grandTotal += dayTotal;
+
+        tableRowsHtml += `
+          <tr class="hover:bg-blue-50/40 transition">
+            <td class="py-3 px-4 font-semibold text-slate-800">
+              <span class="block">${day.name}</span>
+              <span class="text-[11px] font-normal text-slate-400">(${day.date})</span>
+            </td>
+            <td class="py-3 px-4 text-center text-slate-700">${formatVND(dayFood)}</td>
+            <td class="py-3 px-4 text-center text-slate-700">${formatVND(dayTrans)}</td>
+            <td class="py-3 px-4 text-center ${dayFixed > 0 ? 'font-bold text-purple-700 bg-purple-50/50 rounded-lg' : 'text-slate-400'}">
+              ${dayFixed > 0 ? formatVND(dayFixed) : '-'}
+            </td>
+            <td class="py-3 px-4 text-center text-slate-700">${formatVND(daySocial)}</td>
+            <td class="py-3 px-4 text-center text-slate-700">${formatVND(dayOther)}</td>
+            <td class="py-3 px-4 text-right font-extrabold text-slate-900">${formatVND(dayTotal)}</td>
+          </tr>
+        `;
+      });
+
+      // Render vào bảng
+      document.getElementById('dailyPlanTableBody').innerHTML = tableRowsHtml;
+
+      // Cập nhật footer bảng
+      document.getElementById('footFoodTotal').innerText = formatVND(sumFood);
+      document.getElementById('footTransportTotal').innerText = formatVND(sumTrans);
+      document.getElementById('footFixedTotal').innerText = formatVND(sumFixed);
+      document.getElementById('footSocialTotal').innerText = formatVND(sumSocial);
+      document.getElementById('footOtherTotal').innerText = formatVND(sumOther);
+      document.getElementById('footGrandTotal').innerText = formatVND(grandTotal);
+
+      // Cập nhật các thẻ tóm tắt kết quả
+      document.getElementById('resTotalBudget').innerText = formatVND(budget);
+      document.getElementById('resTotalExpense').innerText = formatVND(grandTotal);
+      document.getElementById('resSavingsAmount').innerText = formatVND(savingsVal);
+
+      // Đồng bộ về Dashboard
+      document.getElementById('dashBalanceDisplay').innerText = formatVND(budget);
+      document.getElementById('dashSavingsDisplay').innerText = formatVND(savingsVal);
+
+      // Cập nhật Chart
+      if (doughnutChart) {
+        let fPct = Math.round((sumFood / grandTotal) * 100) || 35;
+        let tPct = Math.round((sumTrans / grandTotal) * 100) || 15;
+        let lPct = Math.round(((sumFixed + sumSocial + sumOther) / grandTotal) * 100) || 30;
+        let sPct = Math.round((savingsVal / budget) * 100) || 20;
+
+        doughnutChart.data.datasets[0].data = [fPct, tPct, lPct, sPct];
+        doughnutChart.update();
+
+        document.getElementById('legFood').innerText = fPct + '%';
+        document.getElementById('legTransport').innerText = tPct + '%';
+        document.getElementById('legLiving').innerText = lPct + '%';
+        document.getElementById('legSavings').innerText = sPct + '%';
+      }
+    }
+
+    // 5. CÁC TÍNH NĂNG LIÊN KẾT NGÂN HÀNG & NẠP TIỀN
+    function openBankLinkModal() {
+      document.getElementById('bankLinkModal').classList.remove('hidden');
+    }
+
+    function closeBankLinkModal() {
+      document.getElementById('bankLinkModal').classList.add('hidden');
+    }
+
+    function selectBankToLink(bankName) {
+      document.getElementById('modalBankName').value = bankName;
+      openBankLinkModal();
+    }
+
+    function handleConfirmLinkBank(e) {
+      e.preventDefault();
+      const bName = document.getElementById('modalBankName').value;
+      const bAcc = document.getElementById('modalBankAccNum').value;
+      const bHolder = document.getElementById('modalBankAccName').value;
+
+      // Thêm thẻ ngân hàng mới vào danh sách
+      const container = document.getElementById('linkedAccountsList');
+      const newCard = document.createElement('div');
+      newCard.className = "p-5 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 text-white shadow-md relative overflow-hidden flex flex-col justify-between h-48 border border-slate-700";
+      newCard.innerHTML = `
+        <div class="flex items-center justify-between relative z-10">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center font-black text-xs">${bName.substring(0,3).toUpperCase()}</span>
+            <span class="font-bold text-sm">${bName}</span>
+          </div>
+          <span class="text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded-full font-semibold">Đã liên kết</span>
+        </div>
+        <div class="relative z-10 my-auto">
+          <p class="text-[10px] text-slate-400 uppercase tracking-wider">Số tài khoản</p>
+          <p class="text-base font-mono tracking-widest font-semibold">•••• •••• ${bAcc.slice(-4) || '9999'}</p>
+        </div>
+        <div class="flex items-center justify-between relative z-10 pt-2 border-t border-white/10 text-xs">
+          <div>
+            <span class="text-[10px] text-slate-400">Chủ thẻ: </span>
+            <span class="font-bold">${bHolder}</span>
+          </div>
+          <button onclick="quickDepositFromBank('${bName}', 150000)" class="px-2.5 py-1 bg-white text-slate-900 font-bold rounded-lg text-[11px] hover:bg-slate-100 transition">
+            Nạp tiền
+          </button>
+        </div>
+      `;
+      // Chèn trước nút thêm mới
+      container.insertBefore(newCard, container.lastElementChild);
+
+      closeBankLinkModal();
+      showToast(`Liên kết thành công tài khoản ${bName}!`);
+    }
+
+    function quickDepositFromBank(bankName, amount) {
+      walletBalance += amount;
+      document.getElementById('dashBalanceDisplay').innerText = formatVND(walletBalance);
+      showToast(`Đã nạp ${formatVND(amount)} từ ${bankName} vào Ví Sinh Viên!`);
+    }
+
+    // Modal nạp tiền
+    function openDepositModal() {
+      document.getElementById('depositModal').classList.remove('hidden');
+    }
+
+    function closeDepositModal() {
+      document.getElementById('depositModal').classList.add('hidden');
+    }
+
+    function setDepositAmount(amt) {
+      document.getElementById('depositAmountInput').value = amt;
+    }
+
+    function confirmDeposit() {
+      const amt = parseFloat(document.getElementById('depositAmountInput').value) || 0;
+      const src = document.getElementById('depositSource').value;
+      if (amt > 0) {
+        walletBalance += amt;
+        document.getElementById('dashBalanceDisplay').innerText = formatVND(walletBalance);
+        closeDepositModal();
+        showToast(`Đã nạp thành công ${formatVND(amt)} từ ${src}!`);
+      }
+    }
+
+    // 6. Cài đặt & Tiện ích bổ sung
+    function saveSettings() {
+      const newName = document.getElementById('settingNameInput').value.trim();
+      if (newName) {
+        currentUserName = newName;
+        document.getElementById('welcomeUserName').innerText = currentUserName;
+        document.getElementById('sidebarUserName').innerText = currentUserName;
+        document.getElementById('bankCardOwner').innerText = currentUserName.toUpperCase();
+        document.getElementById('userAvatarText').innerText = currentUserName.substring(0, 2).toUpperCase();
+        showToast('Đã lưu thông tin cài đặt!');
+      }
+    }
+
+    function changePeriod(val) {
+      showToast(`Đã chuyển sang xem dữ liệu: ${val === 'current' ? 'Tuần này' : (val === 'next' ? 'Tuần tới' : 'Cả tháng')}`);
+    }
+
+    function toggleMobileMenu() {
+      const aside = document.querySelector('aside');
+      aside.classList.toggle('hidden');
+    }
+
+    function formatVND(val) {
+      if (val === undefined || isNaN(val)) return '0đ';
+      return new Intl.NumberFormat('vi-VN').format(val) + 'đ';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      const tMsg = document.getElementById('toastMsg');
+      tMsg.innerText = msg;
+      t.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        t.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
